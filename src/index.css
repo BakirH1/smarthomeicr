@@ -44,6 +44,13 @@
     --social-bg: 210 15% 92%;
     --social-hover: 210 15% 85%;
     --link-color: 210 30% 50%;
+    
+    /* Dashboard tokens */
+    --energy-gradient-start: 186 40% 55%;
+    --energy-gradient-end: 195 35% 65%;
+    --coral: 0 65% 65%;
+    --coral-foreground: 0 0% 100%;
+    --nav-active: 186 45% 50%;
   }
 
   .dark {

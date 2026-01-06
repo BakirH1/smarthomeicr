@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import SmartHomeIcons from "@/components/SmartHomeIcons";
 import LoginForm from "@/components/LoginForm";
 import SocialLoginButtons from "@/components/SocialLoginButtons";
@@ -6,12 +7,14 @@ import { toast } from "sonner";
 
 const Index = () => {
   const [isSignUp, setIsSignUp] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = (email: string, password: string) => {
-    // For now, just show a toast - real auth would need Lovable Cloud
+    // For now, just show a toast and navigate - real auth would need Lovable Cloud
     toast.success(isSignUp ? "Account created successfully!" : "Signed in successfully!", {
       description: `Welcome, ${email}`,
     });
+    navigate("/home");
   };
 
   return (
