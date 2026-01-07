@@ -1,91 +1,106 @@
-import { Lightbulb, Sofa, Bed, ChefHat, Bath, Car } from "lucide-react";
+import { 
+  Sofa, Bed, ChefHat, Bath, Car, Monitor, Plus, ChevronRight, 
+  Thermometer, Droplets, Lightbulb, Tv, Wind, Plug
+} from "lucide-react";
 import { BottomNav } from "@/components/dashboard/BottomNav";
-import { useState } from "react";
-import { Switch } from "@/components/ui/switch";
+import { useNavigate } from "react-router-dom";
+import { useDeviceContext } from "@/context/DeviceContext";
 
-interface Room {
-  id: string;
-  name: string;
-  icon: typeof Lightbulb;
-  lights: number;
-  lightsOn: number;
-}
+const iconMap: Record<string, typeof Sofa> = {
+  Sofa, Bed, ChefHat, Bath, Car, Monitor,
+  Lightbulb, Tv, Wind, Plug
+};
 
 const Rooms = () => {
-  const [rooms, setRooms] = useState<Room[]>([
-    { id: 'living', name: 'Living Room', icon: Sofa, lights: 4, lightsOn: 2 },
-    { id: 'bedroom', name: 'Bedroom', icon: Bed, lights: 3, lightsOn: 0 },
-    { id: 'kitchen', name: 'Kitchen', icon: ChefHat, lights: 5, lightsOn: 3 },
-    { id: 'bathroom', name: 'Bathroom', icon: Bath, lights: 2, lightsOn: 1 },
-    { id: 'garage', name: 'Garage', icon: Car, lights: 2, lightsOn: 0 },
-  ]);
+  const navigate = useNavigate();
+  const { rooms, getDevicesByRoom } = useDeviceContext();
 
-  const toggleRoom = (roomId: string) => {
-    setRooms(prev => prev.map(room => {
-      if (room.id === roomId) {
-        const allOn = room.lightsOn === room.lights;
-        return { ...room, lightsOn: allOn ? 0 : room.lights };
-      }
-      return room;
-    }));
-  };
-
-  const totalLights = rooms.reduce((acc, r) => acc + r.lights, 0);
-  const totalOn = rooms.reduce((acc, r) => acc + r.lightsOn, 0);
+  const getIcon = (iconName: string) => iconMap[iconName] || Sofa;
 
   return (
     <div className="min-h-screen bg-background flex flex-col pb-24">
       <div className="px-6 pt-12 pb-6">
-        <h1 className="text-3xl font-semibold text-foreground">Rooms</h1>
-        <p className="text-muted-foreground mt-1">{totalOn} of {totalLights} lights on</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-semibold text-foreground">Rooms</h1>
+            <p className="text-muted-foreground mt-1">
+              {rooms.length} rooms • {rooms.reduce((acc, r) => acc + r.deviceCount, 0)} devices
+            </p>
+          </div>
+          <button className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-primary-foreground shadow-lg">
+            <Plus className="w-6 h-6" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 px-6 space-y-4">
         {rooms.map((room) => {
-          const Icon = room.icon;
-          const isActive = room.lightsOn > 0;
+          const Icon = getIcon(room.icon);
+          const roomDevices = getDevicesByRoom(room.id);
+          const lightsOn = roomDevices.filter(d => d.type === 'light' && d.isOn).length;
+          const totalLights = roomDevices.filter(d => d.type === 'light').length;
           
           return (
-            <div
+            <button
               key={room.id}
-              className="bg-card rounded-2xl p-5 shadow-sm"
+              onClick={() => navigate(`/room/${room.id}`)}
+              className="w-full bg-card rounded-2xl p-5 shadow-sm hover:shadow-md transition-all text-left group"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                    isActive ? 'bg-yellow-100 text-yellow-600' : 'bg-muted text-muted-foreground'
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+                    room.activeDevices > 0 
+                      ? 'bg-primary/15 text-primary' 
+                      : 'bg-muted text-muted-foreground'
                   }`}>
-                    <Icon className="w-6 h-6" />
+                    <Icon className="w-7 h-7" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground">{room.name}</h3>
                     <p className="text-muted-foreground text-sm">
-                      {room.lightsOn} of {room.lights} lights on
+                      {room.activeDevices} of {room.deviceCount} devices active
                     </p>
                   </div>
                 </div>
-                <Switch
-                  checked={room.lightsOn === room.lights}
-                  onCheckedChange={() => toggleRoom(room.id)}
-                />
+                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
               </div>
-            </div>
+              
+              {/* Room stats */}
+              <div className="flex items-center gap-6 mt-4 pt-4 border-t border-border">
+                {room.temperature && (
+                  <div className="flex items-center gap-2">
+                    <Thermometer className="w-4 h-4 text-accent" />
+                    <span className="text-sm text-muted-foreground">{room.temperature}°C</span>
+                  </div>
+                )}
+                {room.humidity && (
+                  <div className="flex items-center gap-2">
+                    <Droplets className="w-4 h-4 text-primary" />
+                    <span className="text-sm text-muted-foreground">{room.humidity}%</span>
+                  </div>
+                )}
+                {totalLights > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Lightbulb className={`w-4 h-4 ${lightsOn > 0 ? 'text-[hsl(45_90%_55%)]' : 'text-muted-foreground'}`} />
+                    <span className="text-sm text-muted-foreground">{lightsOn}/{totalLights}</span>
+                  </div>
+                )}
+              </div>
+            </button>
           );
         })}
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-4 pt-4">
           <button
-            onClick={() => setRooms(prev => prev.map(r => ({ ...r, lightsOn: r.lights })))}
-            className="py-4 bg-primary text-primary-foreground rounded-full font-medium"
+            className="py-4 gradient-primary text-primary-foreground rounded-2xl font-medium shadow-md"
           >
-            All Lights On
+            All Devices On
           </button>
           <button
-            onClick={() => setRooms(prev => prev.map(r => ({ ...r, lightsOn: 0 })))}
-            className="py-4 bg-muted text-muted-foreground rounded-full font-medium"
+            className="py-4 bg-muted text-muted-foreground rounded-2xl font-medium"
           >
-            All Lights Off
+            All Devices Off
           </button>
         </div>
       </div>
