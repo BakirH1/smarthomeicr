@@ -1,39 +1,87 @@
-import { Thermometer, Droplets } from "lucide-react";
+import { Thermometer, Droplets, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+
+const rooms = ['Kitchen', 'Living Room', 'Bedroom', 'Office'];
 
 export const TemperatureCard = () => {
+  const [selectedRoom, setSelectedRoom] = useState('Kitchen');
+  const [temperature, setTemperature] = useState(29);
+  const [humidity, setHumidity] = useState(72);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTemperature(prev => {
+        const change = (Math.random() - 0.5) * 0.5;
+        return parseFloat((prev + change).toFixed(1));
+      });
+      setHumidity(prev => {
+        const change = Math.floor((Math.random() - 0.5) * 4);
+        return Math.max(40, Math.min(85, prev + change));
+      });
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="bg-card rounded-2xl p-5 shadow-sm">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center">
-            <Thermometer className="w-5 h-5 text-muted-foreground" />
+          <div className="w-12 h-12 rounded-full bg-accent/15 flex items-center justify-center">
+            <Thermometer className="w-5 h-5 text-accent" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-foreground">Temperature</h3>
-            <p className="text-foreground">and humidity</p>
+            <p className="text-muted-foreground text-sm">and humidity</p>
           </div>
         </div>
-        
-        {/* Toggle indicator */}
-        <div className="w-10 h-1 bg-muted rounded-full" />
       </div>
       
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <Thermometer className="w-4 h-4 text-muted-foreground" />
-            <span className="text-muted-foreground">29°</span>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
+              <Thermometer className="w-4 h-4 text-accent" />
+            </div>
+            <span className="text-foreground font-semibold text-lg">{temperature}°</span>
           </div>
           
-          <div className="flex items-center gap-1.5">
-            <Droplets className="w-4 h-4 text-muted-foreground" />
-            <span className="text-muted-foreground">72%</span>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
+              <Droplets className="w-4 h-4 text-primary" />
+            </div>
+            <span className="text-foreground font-semibold text-lg">{humidity}%</span>
           </div>
         </div>
         
-        <button className="px-4 py-1.5 bg-secondary rounded-full text-sm text-foreground">
-          Kitchen
-        </button>
+        <div className="relative">
+          <button 
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="px-4 py-2 bg-secondary rounded-full text-sm text-foreground font-medium flex items-center gap-1"
+          >
+            {selectedRoom}
+            <ChevronDown className="w-4 h-4" />
+          </button>
+          
+          {showDropdown && (
+            <div className="absolute right-0 top-full mt-2 bg-card rounded-xl shadow-lg border border-border overflow-hidden z-10">
+              {rooms.map(room => (
+                <button
+                  key={room}
+                  onClick={() => {
+                    setSelectedRoom(room);
+                    setShowDropdown(false);
+                  }}
+                  className={`w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors ${
+                    selectedRoom === room ? 'text-primary font-medium' : 'text-foreground'
+                  }`}
+                >
+                  {room}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
