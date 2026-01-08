@@ -2,112 +2,119 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   :root {
-    --background: 270 20% 96%;
-    --foreground: 270 30% 15%;
+    --background: 200 20% 94%;
+    --foreground: 220 25% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 270 30% 15%;
+    --card-foreground: 220 25% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 270 30% 15%;
+    --popover-foreground: 220 25% 15%;
 
-    --primary: 270 60% 45%;
+    --primary: 220 70% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 270 30% 90%;
-    --secondary-foreground: 270 30% 20%;
+    --secondary: 200 15% 88%;
+    --secondary-foreground: 220 25% 20%;
 
-    --muted: 270 15% 88%;
-    --muted-foreground: 270 15% 45%;
+    --muted: 200 12% 85%;
+    --muted-foreground: 220 10% 45%;
 
-    --accent: 350 55% 65%;
+    --accent: 145 55% 42%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 270 20% 88%;
+    --border: 200 15% 88%;
     --input: 0 0% 100%;
-    --ring: 270 60% 45%;
+    --ring: 220 70% 50%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
     /* Custom tokens */
-    --icon-bg: 270 50% 50%;
+    --icon-bg: 220 60% 55%;
     --icon-foreground: 0 0% 100%;
-    --btn-signin: 270 50% 45%;
+    --btn-signin: 220 60% 50%;
     --btn-signin-foreground: 0 0% 100%;
-    --social-bg: 270 15% 92%;
-    --social-hover: 270 15% 85%;
-    --link-color: 270 60% 50%;
+    --social-bg: 200 12% 90%;
+    --social-hover: 200 12% 82%;
+    --link-color: 220 70% 55%;
     
     /* Dashboard tokens */
-    --energy-gradient-start: 270 50% 50%;
-    --energy-gradient-end: 350 45% 60%;
-    --coral: 350 55% 65%;
+    --energy-gradient-start: 220 65% 50%;
+    --energy-gradient-end: 200 60% 55%;
+    --coral: 25 85% 55%;
     --coral-foreground: 0 0% 100%;
-    --nav-active: 270 60% 50%;
+    --nav-active: 220 70% 50%;
     
     /* Status colors */
-    --success: 145 55% 45%;
+    --success: 145 55% 42%;
     --success-foreground: 0 0% 100%;
     --warning: 35 90% 55%;
     --warning-foreground: 0 0% 100%;
     
     /* Device type colors */
     --device-light: 45 90% 55%;
-    --device-climate: 200 70% 55%;
-    --device-entertainment: 280 70% 55%;
+    --device-climate: 220 70% 55%;
+    --device-entertainment: 280 60% 55%;
     --device-appliance: 25 75% 55%;
+    
+    /* Chart colors */
+    --chart-1: 280 60% 55%;
+    --chart-2: 220 70% 55%;
+    --chart-3: 25 75% 55%;
+    --chart-4: 145 55% 45%;
+    --chart-5: 350 60% 55%;
   }
 
   .dark {
-    --background: 270 25% 8%;
-    --foreground: 270 20% 92%;
+    --background: 220 20% 8%;
+    --foreground: 200 15% 92%;
 
-    --card: 270 25% 12%;
-    --card-foreground: 270 20% 92%;
+    --card: 220 18% 12%;
+    --card-foreground: 200 15% 92%;
 
-    --popover: 270 25% 12%;
-    --popover-foreground: 270 20% 92%;
+    --popover: 220 18% 12%;
+    --popover-foreground: 200 15% 92%;
 
-    --primary: 270 55% 60%;
-    --primary-foreground: 270 25% 8%;
+    --primary: 220 65% 55%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 270 25% 18%;
-    --secondary-foreground: 270 20% 90%;
+    --secondary: 220 15% 18%;
+    --secondary-foreground: 200 15% 90%;
 
-    --muted: 270 20% 20%;
-    --muted-foreground: 270 15% 55%;
+    --muted: 220 12% 20%;
+    --muted-foreground: 200 10% 55%;
 
-    --accent: 350 50% 55%;
+    --accent: 145 50% 45%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 60% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 270 20% 20%;
-    --input: 270 25% 15%;
-    --ring: 270 55% 60%;
+    --border: 220 15% 20%;
+    --input: 220 18% 15%;
+    --ring: 220 65% 55%;
 
-    --icon-bg: 270 45% 55%;
+    --icon-bg: 220 55% 50%;
     --icon-foreground: 0 0% 100%;
-    --btn-signin: 270 45% 50%;
+    --btn-signin: 220 55% 50%;
     --btn-signin-foreground: 0 0% 100%;
-    --social-bg: 270 20% 18%;
-    --social-hover: 270 20% 25%;
-    --link-color: 270 55% 65%;
+    --social-bg: 220 15% 18%;
+    --social-hover: 220 15% 25%;
+    --link-color: 220 60% 60%;
     
     /* Dashboard tokens */
-    --energy-gradient-start: 270 45% 45%;
-    --energy-gradient-end: 350 40% 50%;
-    --coral: 350 50% 55%;
+    --energy-gradient-start: 220 55% 45%;
+    --energy-gradient-end: 200 50% 50%;
+    --coral: 25 80% 50%;
     --coral-foreground: 0 0% 100%;
-    --nav-active: 270 55% 60%;
+    --nav-active: 220 65% 55%;
     
     /* Status colors */
     --success: 145 50% 40%;
@@ -117,9 +124,16 @@
     
     /* Device type colors */
     --device-light: 45 85% 50%;
-    --device-climate: 200 65% 50%;
-    --device-entertainment: 280 65% 50%;
+    --device-climate: 220 65% 50%;
+    --device-entertainment: 280 55% 50%;
     --device-appliance: 25 70% 50%;
+    
+    /* Chart colors */
+    --chart-1: 280 55% 50%;
+    --chart-2: 220 65% 50%;
+    --chart-3: 25 70% 50%;
+    --chart-4: 145 50% 42%;
+    --chart-5: 350 55% 50%;
   }
 }
 
@@ -136,13 +150,13 @@
 
 @layer utilities {
   .icon-box {
-    @apply flex items-center justify-center w-14 h-14 rounded-lg;
+    @apply flex items-center justify-center w-14 h-14 rounded-xl;
     background: hsl(var(--icon-bg));
     color: hsl(var(--icon-foreground));
   }
 
   .social-btn {
-    @apply flex items-center justify-center w-16 h-12 rounded-lg transition-all duration-200;
+    @apply flex items-center justify-center w-16 h-12 rounded-xl transition-all duration-200;
     background: hsl(var(--social-bg));
   }
 
@@ -152,18 +166,18 @@
   }
 
   .input-field {
-    @apply w-full px-4 py-3.5 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-all duration-200;
+    @apply w-full px-4 py-3 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-all duration-200;
     background: hsl(var(--input));
     border: 1px solid hsl(var(--border));
   }
 
   .input-field:focus {
     border-color: hsl(var(--ring));
-    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.1);
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.15);
   }
 
   .btn-signin {
-    @apply w-full py-3.5 rounded-lg font-semibold text-sm uppercase tracking-wider transition-all duration-200;
+    @apply w-full py-3 rounded-xl font-semibold text-sm uppercase tracking-wider transition-all duration-200;
     background: hsl(var(--btn-signin));
     color: hsl(var(--btn-signin-foreground));
   }
@@ -191,5 +205,13 @@
   
   .gradient-success {
     background: linear-gradient(135deg, hsl(var(--success)) 0%, hsl(160 50% 50%) 100%);
+  }
+
+  .card-shadow {
+    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.08), 0 4px 16px -4px rgba(0, 0, 0, 0.04);
+  }
+
+  .card-shadow-lg {
+    box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.1), 0 8px 24px -8px rgba(0, 0, 0, 0.06);
   }
 }
