@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
-  ArrowLeft, Plus, Settings, Lightbulb, Snowflake, Tv, Plug, 
-  Thermometer, Droplets, Power, ChevronRight, QrCode, Trash2, X,
+  ArrowLeft, Plus, Lightbulb, Snowflake, Tv, Plug, 
+  Power, QrCode, Trash2, Music, Pause, Play,
   Lamp, LampDesk, Fan, Flame, Speaker, Monitor, Wind, Coffee,
-  Utensils, Waves, DoorOpen, BatteryCharging, PanelTop
+  Utensils, Waves, DoorOpen, BatteryCharging, PanelTop, Droplets, Thermometer
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { useDeviceContext } from "@/context/DeviceContext";
-import { Device, DeviceType, deviceTypeColors, deviceTypeLabels } from "@/types/devices";
+import { Device, DeviceType, deviceTypeLabels } from "@/types/devices";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { BottomNav } from "@/components/dashboard/BottomNav";
 
 const iconMap: Record<string, typeof Lightbulb> = {
   Lightbulb, Lamp, LampDesk, Snowflake, Flame, Fan, Tv, Speaker, Monitor,
@@ -32,9 +33,10 @@ const RoomDetail = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showAddDevice, setShowAddDevice] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
-  const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
+  const [expandedDevice, setExpandedDevice] = useState<string | null>(null);
   const [newDeviceName, setNewDeviceName] = useState("");
   const [newDeviceType, setNewDeviceType] = useState<DeviceType>("light");
+  const [isPlaying, setIsPlaying] = useState(true);
 
   const room = getRoomById(roomId || "");
   const devices = getDevicesByRoom(roomId || "");
@@ -49,15 +51,8 @@ const RoomDetail = () => {
 
   const getIcon = (iconName: string) => iconMap[iconName] || Plug;
 
-  const devicesByType = devices.reduce((acc, device) => {
-    if (!acc[device.type]) acc[device.type] = [];
-    acc[device.type].push(device);
-    return acc;
-  }, {} as Record<DeviceType, Device[]>);
-
   const handleAddDevice = () => {
     setIsScanning(true);
-    // Simulate QR code scanning
     setTimeout(() => {
       setIsScanning(false);
       if (newDeviceName.trim()) {
@@ -78,6 +73,7 @@ const RoomDetail = () => {
           colorTemp: newDeviceType === 'light' ? 'neutral' : undefined,
           volume: newDeviceType === 'entertainment' ? 50 : undefined,
           temperature: newDeviceType === 'climate' ? 22 : undefined,
+          connected: true,
         });
         toast.success("Device added successfully!", {
           description: `${newDeviceName} has been registered to ${room.name}`,
@@ -85,7 +81,7 @@ const RoomDetail = () => {
         setNewDeviceName("");
         setShowAddDevice(false);
       }
-    }, 2000);
+    }, 2500);
   };
 
   const handleDeleteDevice = (deviceId: string) => {
@@ -100,207 +96,188 @@ const RoomDetail = () => {
     appliance: Plug,
   };
 
+  // Get featured device (first on device or speaker)
+  const featuredDevice = devices.find(d => d.isOn && (d.type === 'light' || d.type === 'entertainment'));
+  const speakerDevice = devices.find(d => d.type === 'entertainment' && d.nowPlaying);
+
   return (
-    <div className="min-h-screen bg-background pb-8">
+    <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="px-6 pt-12 pb-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="px-5 pt-10 pb-4">
+        <div className="flex items-center justify-between mb-4">
           <button 
             onClick={() => navigate(-1)}
-            className="w-10 h-10 bg-card rounded-full flex items-center justify-center shadow-sm"
+            className="w-10 h-10 bg-card rounded-full flex items-center justify-center card-shadow"
           >
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setIsEditing(!isEditing)}
-              className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition-colors ${
-                isEditing ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground'
-              }`}
-            >
-              <Settings className="w-5 h-5" />
-            </button>
-            <button 
-              onClick={() => setShowAddDevice(true)}
-              className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground shadow-lg"
-            >
-              <Plus className="w-5 h-5" />
-            </button>
-          </div>
+          <button 
+            onClick={() => setShowAddDevice(true)}
+            className="px-4 py-2 bg-card rounded-full text-foreground font-medium text-sm card-shadow"
+          >
+            Add device
+          </button>
         </div>
         
-        <h1 className="text-3xl font-semibold text-foreground">{room.name}</h1>
-        <p className="text-muted-foreground mt-1">
-          {devices.filter(d => d.isOn).length} of {devices.length} devices active
-        </p>
-        
-        {/* Room Stats */}
-        <div className="flex items-center gap-6 mt-4">
-          {room.temperature && (
-            <div className="flex items-center gap-2 bg-card px-3 py-2 rounded-full">
-              <Thermometer className="w-4 h-4 text-accent" />
-              <span className="text-sm font-medium text-foreground">{room.temperature}°C</span>
-            </div>
-          )}
-          {room.humidity && (
-            <div className="flex items-center gap-2 bg-card px-3 py-2 rounded-full">
-              <Droplets className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-foreground">{room.humidity}%</span>
-            </div>
-          )}
-        </div>
+        <h1 className="text-2xl font-semibold text-foreground">{room.name}</h1>
+        <p className="text-muted-foreground text-sm mt-0.5">Control each device</p>
       </div>
 
-      {/* Devices by Type */}
-      <div className="px-6 space-y-6">
-        {(Object.keys(devicesByType) as DeviceType[]).map((type) => {
-          const TypeIcon = typeIcons[type];
-          return (
-            <div key={type}>
-              <div className="flex items-center gap-2 mb-3">
-                <TypeIcon className="w-5 h-5 text-muted-foreground" />
-                <h3 className="text-lg font-semibold text-foreground">{deviceTypeLabels[type]}</h3>
-                <span className="text-muted-foreground text-sm">
-                  ({devicesByType[type].filter(d => d.isOn).length}/{devicesByType[type].length})
-                </span>
+      {/* Device Cards */}
+      <div className="px-5 space-y-4">
+        {/* Featured Device Card */}
+        {featuredDevice && (
+          <div className="bg-card rounded-2xl p-4 card-shadow">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`w-2 h-2 rounded-full ${featuredDevice.connected !== false ? 'bg-accent' : 'bg-muted-foreground'}`} />
+                  <span className={`text-sm font-medium ${featuredDevice.connected !== false ? 'text-accent' : 'text-muted-foreground'}`}>
+                    {featuredDevice.connected !== false ? 'Connected' : 'Offline'}
+                  </span>
+                </div>
+                <h2 className="text-xl font-semibold text-foreground">{featuredDevice.name}</h2>
+                
+                <div className="flex items-center gap-2 mt-3">
+                  <button
+                    onClick={() => toggleDevice(featuredDevice.id)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      featuredDevice.isOn 
+                        ? 'bg-foreground text-background' 
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {featuredDevice.isOn ? 'ON' : 'OFF'}
+                  </button>
+                </div>
               </div>
               
-              <div className="space-y-3">
-                {devicesByType[type].map((device) => {
-                  const Icon = getIcon(device.icon);
-                  return (
-                    <div
-                      key={device.id}
-                      className={`bg-card rounded-2xl p-4 shadow-sm transition-all ${
-                        selectedDevice?.id === device.id ? 'ring-2 ring-primary' : ''
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div 
-                          className="flex items-center gap-3 flex-1 cursor-pointer"
-                          onClick={() => setSelectedDevice(selectedDevice?.id === device.id ? null : device)}
-                        >
-                          <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${
-                            device.isOn ? deviceTypeColors[device.type] : 'bg-muted text-muted-foreground'
-                          }`}>
-                            <Icon className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <h4 className="font-medium text-foreground">{device.name}</h4>
-                            <p className="text-muted-foreground text-sm">
-                              {device.isOn ? 'On' : 'Off'}
-                              {device.brightness !== undefined && device.isOn && ` • ${device.brightness}%`}
-                              {device.temperature !== undefined && device.isOn && ` • ${device.temperature}°C`}
-                              {device.volume !== undefined && device.isOn && ` • Vol ${device.volume}%`}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          {isEditing && (
-                            <button
-                              onClick={() => handleDeleteDevice(device.id)}
-                              className="w-8 h-8 bg-destructive/10 rounded-full flex items-center justify-center text-destructive"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                          <Switch
-                            checked={device.isOn}
-                            onCheckedChange={() => toggleDevice(device.id)}
-                          />
-                        </div>
-                      </div>
-                      
-                      {/* Expanded Controls */}
-                      {selectedDevice?.id === device.id && device.isOn && (
-                        <div className="mt-4 pt-4 border-t border-border space-y-4">
-                          {device.brightness !== undefined && (
-                            <div>
-                              <div className="flex justify-between text-sm mb-2">
-                                <span className="text-muted-foreground">Brightness</span>
-                                <span className="text-foreground font-medium">{device.brightness}%</span>
-                              </div>
-                              <Slider
-                                value={[device.brightness]}
-                                onValueChange={([val]) => updateDevice(device.id, { brightness: val })}
-                                max={100}
-                                step={1}
-                              />
-                            </div>
-                          )}
-                          {device.colorTemp !== undefined && (
-                            <div>
-                              <span className="text-sm text-muted-foreground mb-2 block">Color Temperature</span>
-                              <div className="flex gap-2">
-                                {(['warm', 'neutral', 'cool'] as const).map((temp) => (
-                                  <button
-                                    key={temp}
-                                    onClick={() => updateDevice(device.id, { colorTemp: temp })}
-                                    className={`flex-1 py-2 rounded-lg text-sm capitalize transition-colors ${
-                                      device.colorTemp === temp
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'bg-muted text-muted-foreground'
-                                    }`}
-                                  >
-                                    {temp}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {device.volume !== undefined && (
-                            <div>
-                              <div className="flex justify-between text-sm mb-2">
-                                <span className="text-muted-foreground">Volume</span>
-                                <span className="text-foreground font-medium">{device.volume}%</span>
-                              </div>
-                              <Slider
-                                value={[device.volume]}
-                                onValueChange={([val]) => updateDevice(device.id, { volume: val })}
-                                max={100}
-                                step={1}
-                              />
-                            </div>
-                          )}
-                          {device.temperature !== undefined && (
-                            <div>
-                              <div className="flex justify-between text-sm mb-2">
-                                <span className="text-muted-foreground">Temperature</span>
-                                <span className="text-foreground font-medium">{device.temperature}°C</span>
-                              </div>
-                              <Slider
-                                value={[device.temperature]}
-                                onValueChange={([val]) => updateDevice(device.id, { temperature: val })}
-                                min={16}
-                                max={30}
-                                step={1}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+              <div className="w-20 h-20 bg-muted rounded-xl flex items-center justify-center">
+                {(() => {
+                  const Icon = getIcon(featuredDevice.icon);
+                  return <Icon className="w-10 h-10 text-muted-foreground" />;
+                })()}
               </div>
             </div>
-          );
-        })}
+          </div>
+        )}
+
+        {/* Device Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          {devices.filter(d => d.id !== featuredDevice?.id && d.id !== speakerDevice?.id).slice(0, 4).map((device) => {
+            const Icon = getIcon(device.icon);
+            return (
+              <div
+                key={device.id}
+                className="bg-card rounded-2xl p-3 card-shadow relative"
+              >
+                {isEditing && (
+                  <button
+                    onClick={() => handleDeleteDevice(device.id)}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-destructive rounded-full flex items-center justify-center text-destructive-foreground z-10"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                )}
+                
+                <div className="flex items-start justify-between mb-2">
+                  <div className="w-12 h-12 bg-muted rounded-xl flex items-center justify-center">
+                    <Icon className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  
+                  <div className="flex flex-col items-end gap-1">
+                    <button
+                      onClick={() => {
+                        if (!device.isOn) toggleDevice(device.id);
+                      }}
+                      className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                        !device.isOn ? 'bg-muted text-muted-foreground' : 'bg-muted/50 text-muted-foreground'
+                      }`}
+                    >
+                      OFF
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (device.isOn) return;
+                        toggleDevice(device.id);
+                      }}
+                      className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                        device.isOn ? 'bg-foreground text-background' : 'bg-muted/50 text-muted-foreground'
+                      }`}
+                    >
+                      ON
+                    </button>
+                  </div>
+                </div>
+                
+                <h3 className="font-medium text-foreground text-sm leading-tight">{device.name}</h3>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className={`w-1.5 h-1.5 rounded-full ${device.connected !== false ? 'bg-accent' : 'bg-muted-foreground'}`} />
+                  <span className={`text-xs ${device.connected !== false ? 'text-accent' : 'text-muted-foreground'}`}>
+                    {device.connected !== false ? 'Connected' : 'Offline'}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Now Playing Card */}
+        {speakerDevice && speakerDevice.nowPlaying && (
+          <div className="bg-foreground rounded-2xl p-4 flex items-center gap-4">
+            <div className="w-16 h-16 bg-muted/20 rounded-xl flex items-center justify-center">
+              <Music className="w-8 h-8 text-background/60" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-background/60 text-xs font-medium uppercase tracking-wide">Now Playing</p>
+              <h3 className="text-background font-semibold truncate">{speakerDevice.nowPlaying.title}</h3>
+              <p className="text-background/60 text-sm truncate">{speakerDevice.nowPlaying.artist}</p>
+            </div>
+            <button
+              onClick={() => setIsPlaying(!isPlaying)}
+              className="w-12 h-8 bg-background/20 rounded-full flex items-center justify-center"
+            >
+              {isPlaying ? (
+                <Pause className="w-4 h-4 text-background" />
+              ) : (
+                <Play className="w-4 h-4 text-background" />
+              )}
+            </button>
+          </div>
+        )}
+
+        {/* Edit Mode Toggle */}
+        <button
+          onClick={() => setIsEditing(!isEditing)}
+          className={`w-full py-3 rounded-xl font-medium text-sm transition-colors ${
+            isEditing 
+              ? 'bg-primary text-primary-foreground' 
+              : 'bg-muted text-muted-foreground'
+          }`}
+        >
+          {isEditing ? 'Done Editing' : 'Edit Devices'}
+        </button>
       </div>
 
       {/* Add Device Dialog */}
       <Dialog open={showAddDevice} onOpenChange={setShowAddDevice}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-card border-border">
           <DialogHeader>
             <DialogTitle>Add New Device</DialogTitle>
           </DialogHeader>
           
           {isScanning ? (
             <div className="py-12 flex flex-col items-center gap-4">
-              <div className="w-32 h-32 border-4 border-primary border-dashed rounded-2xl flex items-center justify-center animate-pulse">
-                <QrCode className="w-16 h-16 text-primary" />
+              <div className="w-40 h-40 border-4 border-primary border-dashed rounded-2xl flex items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-primary/5" />
+                <div className="absolute top-0 left-0 right-0 h-1 bg-primary animate-pulse" 
+                  style={{ animation: 'scan 2s ease-in-out infinite' }} />
+                <QrCode className="w-20 h-20 text-primary" />
               </div>
-              <p className="text-muted-foreground">Scanning for device...</p>
+              <p className="text-muted-foreground text-center">
+                Scanning for device...<br />
+                <span className="text-sm">Point camera at device QR code</span>
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -310,7 +287,7 @@ const RoomDetail = () => {
                   type="text"
                   value={newDeviceName}
                   onChange={(e) => setNewDeviceName(e.target.value)}
-                  placeholder="Enter device name"
+                  placeholder="e.g., Smart Lamp Pro"
                   className="input-field"
                 />
               </div>
@@ -350,6 +327,8 @@ const RoomDetail = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <BottomNav />
     </div>
   );
 };

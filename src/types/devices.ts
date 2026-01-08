@@ -7,14 +7,18 @@ export interface Device {
   isOn: boolean;
   roomId: string;
   icon: string;
-  // Type-specific properties
-  brightness?: number; // for lights
-  colorTemp?: 'warm' | 'neutral' | 'cool'; // for lights
-  temperature?: number; // for climate
-  mode?: string; // for climate/entertainment
-  volume?: number; // for entertainment
-  channel?: string; // for entertainment
-  timer?: number; // for appliances (minutes)
+  brightness?: number;
+  colorTemp?: 'warm' | 'neutral' | 'cool';
+  temperature?: number;
+  volume?: number;
+  mode?: string;
+  channel?: string;
+  timer?: number;
+  connected?: boolean;
+  nowPlaying?: {
+    title: string;
+    artist: string;
+  };
 }
 
 export interface Room {
@@ -25,18 +29,36 @@ export interface Room {
   activeDevices: number;
   temperature?: number;
   humidity?: number;
+  image?: string;
 }
 
 export const deviceTypeColors: Record<DeviceType, string> = {
-  light: 'bg-[hsl(45_90%_55%)] text-white',
-  climate: 'bg-[hsl(200_70%_55%)] text-white',
-  entertainment: 'bg-[hsl(280_70%_55%)] text-white',
-  appliance: 'bg-[hsl(25_75%_55%)] text-white',
+  light: 'bg-amber-400/20 text-amber-500',
+  climate: 'bg-primary/20 text-primary',
+  entertainment: 'bg-purple-400/20 text-purple-500',
+  appliance: 'bg-orange-400/20 text-orange-500',
 };
 
 export const deviceTypeLabels: Record<DeviceType, string> = {
-  light: 'Lighting',
+  light: 'Lights',
   climate: 'Climate',
   entertainment: 'Entertainment',
-  appliance: 'Appliance',
+  appliance: 'Appliances',
 };
+
+export interface EnergyData {
+  category: string;
+  value: number;
+  color: string;
+}
+
+export interface UsageStat {
+  id: string;
+  name: string;
+  icon: string;
+  currentUsage: number;
+  unit: string;
+  cost: number;
+  trend: 'up' | 'down';
+  change: number;
+}

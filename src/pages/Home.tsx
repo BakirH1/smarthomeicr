@@ -4,7 +4,7 @@ import { LightsCard } from "@/components/dashboard/LightsCard";
 import { LockCard } from "@/components/dashboard/LockCard";
 import { BottomNav } from "@/components/dashboard/BottomNav";
 import { useState } from "react";
-import { GripVertical, X } from "lucide-react";
+import { X } from "lucide-react";
 
 type CardType = 'energy' | 'temperature' | 'lights' | 'lock';
 
@@ -29,27 +29,27 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col pb-24">
-      <div className="px-6 pt-12 pb-4">
-        <h1 className="text-3xl font-semibold text-foreground mb-4">Welcome home,</h1>
+      <div className="px-5 pt-10 pb-3">
+        <h1 className="text-2xl font-semibold text-foreground mb-3">Welcome home,</h1>
         
         <div className="flex items-center justify-between">
-          <span className="text-lg font-medium text-foreground">At a glance</span>
+          <span className="text-base font-medium text-foreground">At a glance</span>
           <button 
             onClick={() => setIsEditing(!isEditing)}
-            className={`px-4 py-2 rounded-full text-sm font-medium shadow-sm transition-colors ${
+            className={`px-3 py-1.5 rounded-full text-sm font-medium card-shadow transition-colors ${
               isEditing ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground'
             }`}
           >
-            {isEditing ? 'Done' : 'Edit layout'}
+            {isEditing ? 'Done' : 'Edit'}
           </button>
         </div>
       </div>
 
       {/* Edit Mode Panel */}
       {isEditing && (
-        <div className="px-6 mb-4">
-          <div className="bg-card rounded-2xl p-4 shadow-sm">
-            <p className="text-sm text-muted-foreground mb-3">Toggle cards visibility:</p>
+        <div className="px-5 mb-3">
+          <div className="bg-card rounded-xl p-3 card-shadow">
+            <p className="text-sm text-muted-foreground mb-2">Toggle cards:</p>
             <div className="flex flex-wrap gap-2">
               {(Object.keys(cardComponents) as CardType[]).map((card) => (
                 <button
@@ -69,13 +69,13 @@ const Home = () => {
         </div>
       )}
 
-      <div className="flex-1 px-6 space-y-4">
+      <div className="flex-1 px-5 space-y-3">
         {visibleCards.includes('energy') && (
           <div className="relative">
             {isEditing && (
               <button
                 onClick={() => toggleCard('energy')}
-                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center z-10"
+                className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center z-10"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -89,7 +89,7 @@ const Home = () => {
             {isEditing && (
               <button
                 onClick={() => toggleCard('temperature')}
-                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center z-10"
+                className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center z-10"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -98,13 +98,13 @@ const Home = () => {
           </div>
         )}
         
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {visibleCards.includes('lights') && (
             <div className="relative">
               {isEditing && (
                 <button
                   onClick={() => toggleCard('lights')}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center z-10"
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center z-10"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -117,7 +117,7 @@ const Home = () => {
               {isEditing && (
                 <button
                   onClick={() => toggleCard('lock')}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center z-10"
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center z-10"
                 >
                   <X className="w-4 h-4" />
                 </button>
