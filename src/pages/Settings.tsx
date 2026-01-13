@@ -81,6 +81,19 @@ const Settings = () => {
           <ChevronRight className="w-5 h-5 text-muted-foreground" />
         </button>
 
+        {/* About */}
+        <div className="bg-card rounded-2xl shadow-sm w-full p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
+              <span className="text-xs font-bold text-primary">i</span>
+            </div>
+            <span className="text-foreground font-medium">About</span>
+          </div>
+          <p className="text-muted-foreground text-sm text-center">
+            Your about text goes here...
+          </p>
+        </div>
+
         {/* Logout */}
         <button 
           onClick={handleLogout}
