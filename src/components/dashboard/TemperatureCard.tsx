@@ -1,30 +1,16 @@
 import { Thermometer, Droplets, ChevronDown } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 const rooms = ['Kitchen', 'Living Room', 'Bedroom', 'Office'];
 
 export const TemperatureCard = () => {
   const [selectedRoom, setSelectedRoom] = useState('Kitchen');
-  const [temperature, setTemperature] = useState(29);
-  const [humidity, setHumidity] = useState(72);
+  const [temperature] = useState(22);
+  const [humidity] = useState(55);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTemperature(prev => {
-        const change = (Math.random() - 0.5) * 0.5;
-        return parseFloat((prev + change).toFixed(1));
-      });
-      setHumidity(prev => {
-        const change = Math.floor((Math.random() - 0.5) * 4);
-        return Math.max(40, Math.min(85, prev + change));
-      });
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
-    <div className="bg-card rounded-2xl p-5 shadow-sm">
+    <div className="bg-card rounded-2xl p-5 card-shadow">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-accent/15 flex items-center justify-center">

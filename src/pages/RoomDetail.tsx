@@ -4,7 +4,8 @@ import {
   ArrowLeft, Plus, Lightbulb, Snowflake, Tv, Plug, 
   Power, QrCode, Trash2, Music, Pause, Play,
   Lamp, LampDesk, Fan, Flame, Speaker, Monitor, Wind, Coffee,
-  Utensils, Waves, DoorOpen, BatteryCharging, PanelTop, Droplets, Thermometer
+  Utensils, Waves, DoorOpen, BatteryCharging, PanelTop, Droplets, Thermometer,
+  Check, Loader2
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
@@ -32,7 +33,7 @@ const RoomDetail = () => {
   
   const [isEditing, setIsEditing] = useState(false);
   const [showAddDevice, setShowAddDevice] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
+  const [scanStep, setScanStep] = useState<'form' | 'scanning' | 'success'>('form');
   const [expandedDevice, setExpandedDevice] = useState<string | null>(null);
   const [newDeviceName, setNewDeviceName] = useState("");
   const [newDeviceType, setNewDeviceType] = useState<DeviceType>("light");
@@ -51,11 +52,19 @@ const RoomDetail = () => {
 
   const getIcon = (iconName: string) => iconMap[iconName] || Plug;
 
-  const handleAddDevice = () => {
-    setIsScanning(true);
+  const handleStartScan = () => {
+    if (!newDeviceName.trim()) {
+      toast.error("Please enter a device name");
+      return;
+    }
+    setScanStep('scanning');
+    
+    // Simulate scanning
     setTimeout(() => {
-      setIsScanning(false);
-      if (newDeviceName.trim()) {
+      setScanStep('success');
+      
+      // Add the device after success animation
+      setTimeout(() => {
         const iconOptions: Record<DeviceType, string> = {
           light: 'Lightbulb',
           climate: 'Fan',
@@ -75,18 +84,34 @@ const RoomDetail = () => {
           temperature: newDeviceType === 'climate' ? 22 : undefined,
           connected: true,
         });
+        
         toast.success("Device added successfully!", {
           description: `${newDeviceName} has been registered to ${room.name}`,
         });
+        
+        // Reset and close
         setNewDeviceName("");
+        setNewDeviceType("light");
+        setScanStep('form');
         setShowAddDevice(false);
-      }
-    }, 2500);
+      }, 1000);
+    }, 2000);
+  };
+
+  const handleCloseDialog = () => {
+    setShowAddDevice(false);
+    setScanStep('form');
+    setNewDeviceName("");
+    setNewDeviceType("light");
   };
 
   const handleDeleteDevice = (deviceId: string) => {
     removeDevice(deviceId);
     toast.success("Device removed");
+  };
+
+  const handleToggleDevice = (deviceId: string) => {
+    toggleDevice(deviceId);
   };
 
   const typeIcons: Record<DeviceType, typeof Lightbulb> = {
@@ -113,8 +138,9 @@ const RoomDetail = () => {
           </button>
           <button 
             onClick={() => setShowAddDevice(true)}
-            className="px-4 py-2 bg-card rounded-full text-foreground font-medium text-sm card-shadow"
+            className="px-4 py-2 bg-card rounded-full text-foreground font-medium text-sm card-shadow flex items-center gap-2"
           >
+            <Plus className="w-4 h-4" />
             Add device
           </button>
         </div>
@@ -140,22 +166,25 @@ const RoomDetail = () => {
                 
                 <div className="flex items-center gap-2 mt-3">
                   <button
-                    onClick={() => toggleDevice(featuredDevice.id)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    onClick={() => handleToggleDevice(featuredDevice.id)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
                       featuredDevice.isOn 
-                        ? 'bg-foreground text-background' 
-                        : 'bg-muted text-muted-foreground'
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     }`}
                   >
+                    <Power className="w-4 h-4" />
                     {featuredDevice.isOn ? 'ON' : 'OFF'}
                   </button>
                 </div>
               </div>
               
-              <div className="w-20 h-20 bg-muted rounded-xl flex items-center justify-center">
+              <div className={`w-20 h-20 rounded-xl flex items-center justify-center transition-colors ${
+                featuredDevice.isOn ? 'bg-primary/20' : 'bg-muted'
+              }`}>
                 {(() => {
                   const Icon = getIcon(featuredDevice.icon);
-                  return <Icon className="w-10 h-10 text-muted-foreground" />;
+                  return <Icon className={`w-10 h-10 ${featuredDevice.isOn ? 'text-primary' : 'text-muted-foreground'}`} />;
                 })()}
               </div>
             </div>
@@ -164,7 +193,7 @@ const RoomDetail = () => {
 
         {/* Device Grid */}
         <div className="grid grid-cols-2 gap-3">
-          {devices.filter(d => d.id !== featuredDevice?.id && d.id !== speakerDevice?.id).slice(0, 4).map((device) => {
+          {devices.filter(d => d.id !== featuredDevice?.id && d.id !== speakerDevice?.id).map((device) => {
             const Icon = getIcon(device.icon);
             return (
               <div
@@ -181,40 +210,29 @@ const RoomDetail = () => {
                 )}
                 
                 <div className="flex items-start justify-between mb-2">
-                  <div className="w-12 h-12 bg-muted rounded-xl flex items-center justify-center">
-                    <Icon className="w-6 h-6 text-muted-foreground" />
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
+                    device.isOn ? 'bg-primary/20' : 'bg-muted'
+                  }`}>
+                    <Icon className={`w-6 h-6 ${device.isOn ? 'text-primary' : 'text-muted-foreground'}`} />
                   </div>
                   
-                  <div className="flex flex-col items-end gap-1">
-                    <button
-                      onClick={() => {
-                        if (!device.isOn) toggleDevice(device.id);
-                      }}
-                      className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                        !device.isOn ? 'bg-muted text-muted-foreground' : 'bg-muted/50 text-muted-foreground'
-                      }`}
-                    >
-                      OFF
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (device.isOn) return;
-                        toggleDevice(device.id);
-                      }}
-                      className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                        device.isOn ? 'bg-foreground text-background' : 'bg-muted/50 text-muted-foreground'
-                      }`}
-                    >
-                      ON
-                    </button>
-                  </div>
+                  <Switch
+                    checked={device.isOn}
+                    onCheckedChange={() => handleToggleDevice(device.id)}
+                    className="data-[state=checked]:bg-primary"
+                  />
                 </div>
                 
                 <h3 className="font-medium text-foreground text-sm leading-tight">{device.name}</h3>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span className={`w-1.5 h-1.5 rounded-full ${device.connected !== false ? 'bg-accent' : 'bg-muted-foreground'}`} />
-                  <span className={`text-xs ${device.connected !== false ? 'text-accent' : 'text-muted-foreground'}`}>
-                    {device.connected !== false ? 'Connected' : 'Offline'}
+                <div className="flex items-center justify-between mt-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className={`w-1.5 h-1.5 rounded-full ${device.connected !== false ? 'bg-accent' : 'bg-muted-foreground'}`} />
+                    <span className={`text-xs ${device.connected !== false ? 'text-accent' : 'text-muted-foreground'}`}>
+                      {device.connected !== false ? 'Connected' : 'Offline'}
+                    </span>
+                  </div>
+                  <span className={`text-xs font-medium ${device.isOn ? 'text-primary' : 'text-muted-foreground'}`}>
+                    {device.isOn ? 'ON' : 'OFF'}
                   </span>
                 </div>
               </div>
@@ -260,26 +278,48 @@ const RoomDetail = () => {
       </div>
 
       {/* Add Device Dialog */}
-      <Dialog open={showAddDevice} onOpenChange={setShowAddDevice}>
+      <Dialog open={showAddDevice} onOpenChange={handleCloseDialog}>
         <DialogContent className="sm:max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Add New Device</DialogTitle>
+            <DialogTitle>
+              {scanStep === 'form' && 'Add New Device'}
+              {scanStep === 'scanning' && 'Scanning...'}
+              {scanStep === 'success' && 'Device Found!'}
+            </DialogTitle>
           </DialogHeader>
           
-          {isScanning ? (
+          {scanStep === 'scanning' && (
             <div className="py-12 flex flex-col items-center gap-4">
-              <div className="w-40 h-40 border-4 border-primary border-dashed rounded-2xl flex items-center justify-center relative overflow-hidden">
+              <div className="w-40 h-40 border-4 border-primary rounded-2xl flex items-center justify-center relative overflow-hidden">
                 <div className="absolute inset-0 bg-primary/5" />
-                <div className="absolute top-0 left-0 right-0 h-1 bg-primary animate-pulse" 
-                  style={{ animation: 'scan 2s ease-in-out infinite' }} />
+                <div 
+                  className="absolute top-0 left-0 right-0 h-1 bg-primary rounded-full"
+                  style={{ 
+                    animation: 'scanLine 1.5s ease-in-out infinite'
+                  }} 
+                />
                 <QrCode className="w-20 h-20 text-primary" />
               </div>
-              <p className="text-muted-foreground text-center">
-                Scanning for device...<br />
-                <span className="text-sm">Point camera at device QR code</span>
-              </p>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Looking for {newDeviceName}...</span>
+              </div>
             </div>
-          ) : (
+          )}
+
+          {scanStep === 'success' && (
+            <div className="py-12 flex flex-col items-center gap-4">
+              <div className="w-20 h-20 bg-accent/20 rounded-full flex items-center justify-center">
+                <Check className="w-10 h-10 text-accent" />
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-semibold text-foreground">{newDeviceName}</p>
+                <p className="text-muted-foreground text-sm mt-1">Successfully connected!</p>
+              </div>
+            </div>
+          )}
+          
+          {scanStep === 'form' && (
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">Device Name</label>
@@ -288,7 +328,7 @@ const RoomDetail = () => {
                   value={newDeviceName}
                   onChange={(e) => setNewDeviceName(e.target.value)}
                   placeholder="e.g., Smart Lamp Pro"
-                  className="input-field"
+                  className="w-full px-4 py-3 bg-muted border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
               
@@ -304,7 +344,7 @@ const RoomDetail = () => {
                         className={`p-3 rounded-xl flex items-center gap-2 transition-colors ${
                           newDeviceType === type
                             ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground'
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
                         }`}
                       >
                         <TypeIcon className="w-5 h-5" />
@@ -316,17 +356,24 @@ const RoomDetail = () => {
               </div>
               
               <button
-                onClick={handleAddDevice}
-                disabled={!newDeviceName.trim()}
-                className="w-full py-3 gradient-primary text-primary-foreground rounded-xl font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                onClick={handleStartScan}
+                className="w-full py-3 gradient-primary text-primary-foreground rounded-xl font-medium flex items-center justify-center gap-2"
               >
                 <QrCode className="w-5 h-5" />
-                Scan & Add Device
+                Scan QR Code
               </button>
             </div>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Scan animation keyframes */}
+      <style>{`
+        @keyframes scanLine {
+          0%, 100% { top: 0; }
+          50% { top: calc(100% - 4px); }
+        }
+      `}</style>
 
       <BottomNav />
     </div>
