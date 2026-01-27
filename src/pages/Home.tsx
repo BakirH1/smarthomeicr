@@ -4,7 +4,7 @@ import { LightsCard } from "@/components/dashboard/LightsCard";
 import { LockCard } from "@/components/dashboard/LockCard";
 import { BottomNav } from "@/components/dashboard/BottomNav";
 import { useState } from "react";
-import { X, Plus, Check } from "lucide-react";
+import { X, Plus, Check, Power } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -21,9 +21,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { useDeviceContext } from "@/context/DeviceContext";
+import { Switch } from "@/components/ui/switch";
 
 type CardType = 'energy' | 'temperature' | 'lights' | 'lock' | 'climate' | 'security' | 'scenes';
-type DataType = 'energy' | 'temperature' | 'humidity' | 'lights' | 'security' | 'custom';
+type DataType = 'energy' | 'temperature' | 'humidity' | 'lights' | 'security' | 'custom' | 'device';
 
 interface CardConfig {
   component: React.ReactNode;
@@ -37,9 +39,12 @@ interface CustomCard {
   name: string;
   dataType: DataType;
   value: string;
+  deviceId?: string;
+  roomId?: string;
 }
 
 const dataTypeOptions: { value: DataType; label: string; unit: string }[] = [
+  { value: 'device', label: 'Device Control', unit: '' },
   { value: 'energy', label: 'Energy Usage', unit: 'kWh' },
   { value: 'temperature', label: 'Temperature', unit: '°C' },
   { value: 'humidity', label: 'Humidity', unit: '%' },
@@ -49,13 +54,16 @@ const dataTypeOptions: { value: DataType; label: string; unit: string }[] = [
 ];
 
 const Home = () => {
+  const { rooms, devices, toggleDevice, getDevicesByRoom } = useDeviceContext();
   const [isEditing, setIsEditing] = useState(false);
   const [showAddCards, setShowAddCards] = useState(false);
   const [showCreateCard, setShowCreateCard] = useState(false);
   const [visibleCards, setVisibleCards] = useState<CardType[]>(['energy', 'temperature', 'lights', 'lock']);
   const [customCards, setCustomCards] = useState<CustomCard[]>([]);
   const [newCardName, setNewCardName] = useState('');
-  const [newCardDataType, setNewCardDataType] = useState<DataType>('energy');
+  const [newCardDataType, setNewCardDataType] = useState<DataType>('device');
+  const [selectedRoomId, setSelectedRoomId] = useState<string>('');
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>('');
 
   const toggleCard = (card: CardType) => {
     setVisibleCards(prev => 
@@ -65,6 +73,8 @@ const Home = () => {
     );
   };
 
+  const roomDevices = selectedRoomId ? getDevicesByRoom(selectedRoomId) : [];
+
   const handleCreateCard = () => {
     if (!newCardName.trim()) return;
     
@@ -73,11 +83,15 @@ const Home = () => {
       name: newCardName,
       dataType: newCardDataType,
       value: getDefaultValue(newCardDataType),
+      deviceId: newCardDataType === 'device' ? selectedDeviceId : undefined,
+      roomId: newCardDataType === 'device' ? selectedRoomId : undefined,
     };
     
     setCustomCards(prev => [...prev, newCard]);
     setNewCardName('');
-    setNewCardDataType('energy');
+    setNewCardDataType('device');
+    setSelectedRoomId('');
+    setSelectedDeviceId('');
     setShowCreateCard(false);
   };
 
@@ -88,6 +102,7 @@ const Home = () => {
       case 'humidity': return '45';
       case 'lights': return '3';
       case 'security': return 'Armed';
+      case 'device': return '';
       default: return '—';
     }
   };
@@ -161,6 +176,9 @@ const Home = () => {
           <div className="grid grid-cols-2 gap-3">
             {customCards.map((card) => {
               const dataOption = dataTypeOptions.find(d => d.value === card.dataType);
+              const device = card.deviceId ? devices.find(d => d.id === card.deviceId) : null;
+              const room = card.roomId ? rooms.find(r => r.id === card.roomId) : null;
+              
               return (
                 <div key={card.id} className="relative bg-card rounded-2xl p-4 card-shadow">
                   {isEditing && (
@@ -171,13 +189,29 @@ const Home = () => {
                       <X className="w-4 h-4" />
                     </button>
                   )}
-                  <p className="text-xs text-muted-foreground mb-1">{card.name}</p>
-                  <p className="text-2xl font-bold text-foreground">
-                    {card.value}
-                    <span className="text-sm font-normal text-muted-foreground ml-1">
-                      {dataOption?.unit}
-                    </span>
-                  </p>
+                  
+                  {card.dataType === 'device' && device ? (
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">{room?.name}</p>
+                        <p className="text-sm font-semibold text-foreground">{device.name}</p>
+                      </div>
+                      <Switch
+                        checked={device.isOn}
+                        onCheckedChange={() => toggleDevice(device.id)}
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-xs text-muted-foreground mb-1">{card.name}</p>
+                      <p className="text-2xl font-bold text-foreground">
+                        {card.value}
+                        <span className="text-sm font-normal text-muted-foreground ml-1">
+                          {dataOption?.unit}
+                        </span>
+                      </p>
+                    </>
+                  )}
                 </div>
               );
             })}
@@ -276,7 +310,7 @@ const Home = () => {
               <Label htmlFor="cardName">Card Name</Label>
               <Input
                 id="cardName"
-                placeholder="e.g., Kitchen Temperature"
+                placeholder="e.g., Kitchen Light Switch"
                 value={newCardName}
                 onChange={(e) => setNewCardName(e.target.value)}
                 className="bg-muted border-border"
@@ -284,8 +318,12 @@ const Home = () => {
             </div>
             
             <div className="space-y-2">
-              <Label>Data to Display</Label>
-              <Select value={newCardDataType} onValueChange={(v) => setNewCardDataType(v as DataType)}>
+              <Label>Card Type</Label>
+              <Select value={newCardDataType} onValueChange={(v) => {
+                setNewCardDataType(v as DataType);
+                setSelectedRoomId('');
+                setSelectedDeviceId('');
+              }}>
                 <SelectTrigger className="bg-muted border-border">
                   <SelectValue />
                 </SelectTrigger>
@@ -299,18 +337,63 @@ const Home = () => {
               </Select>
             </div>
 
+            {newCardDataType === 'device' && (
+              <>
+                <div className="space-y-2">
+                  <Label>Select Room</Label>
+                  <Select value={selectedRoomId} onValueChange={(v) => {
+                    setSelectedRoomId(v);
+                    setSelectedDeviceId('');
+                  }}>
+                    <SelectTrigger className="bg-muted border-border">
+                      <SelectValue placeholder="Choose a room" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {rooms.map((room) => (
+                        <SelectItem key={room.id} value={room.id}>
+                          {room.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {selectedRoomId && (
+                  <div className="space-y-2">
+                    <Label>Select Device</Label>
+                    <Select value={selectedDeviceId} onValueChange={setSelectedDeviceId}>
+                      <SelectTrigger className="bg-muted border-border">
+                        <SelectValue placeholder="Choose a device" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {roomDevices.map((device) => (
+                          <SelectItem key={device.id} value={device.id}>
+                            {device.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </>
+            )}
+
             <div className="flex gap-3 pt-2">
               <Button
                 variant="outline"
                 className="flex-1"
-                onClick={() => setShowCreateCard(false)}
+                onClick={() => {
+                  setShowCreateCard(false);
+                  setSelectedRoomId('');
+                  setSelectedDeviceId('');
+                }}
               >
                 Cancel
               </Button>
               <Button
                 className="flex-1"
                 onClick={handleCreateCard}
-                disabled={!newCardName.trim()}
+                disabled={!newCardName.trim() || (newCardDataType === 'device' && !selectedDeviceId)}
               >
                 Create Card
               </Button>
